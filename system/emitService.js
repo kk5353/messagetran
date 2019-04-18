@@ -1,4 +1,4 @@
-import * as jwt from 'jsonwebtoken'
+const jwt = require('jsonwebtoken');
 var MongoClient = require('mongodb').MongoClient;
 var url = "mongodb://39.98.212.236:20003/runoob";
 module.exports = function (io) {
