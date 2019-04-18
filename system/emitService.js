@@ -1,3 +1,4 @@
+import * as jwt from 'jsonwebtoken'
 var MongoClient = require('mongodb').MongoClient;
 var url = "mongodb://39.98.212.236:20003/runoob";
 module.exports = function (io) {
@@ -5,14 +6,25 @@ module.exports = function (io) {
 
     io.on('connection', function (socket) {
 
+        sockets.id = socket;
         //接收并处理客户端的hi事件
         socket.on('hi', function (data) {
             console.log(data);
 
             //触发客户端事件c_hi
+
+            jwt.verify(data.token, 'zh-123456SFU>a4bh_$3#46d0e85W10aGMkE5xKQ', function (err, datas) {
+                if (err) {
+                    console.log(err);
+                } else {
+                    data.data = datas;
+                }
+            })
+
+
             socket.join(data.roomId);
             data.name = '系统为您增加的内容';
-            // data.socket = JSON.stringify(socket);
+
             io.sockets.in(data.roomId).emit('c_hi', JSON.stringify(data));
 
             MongoClient.connect(url, { useNewUrlParser: true }, function (err, db) {
