@@ -76,26 +76,44 @@ module.exports = function (io) {
                         data.data = {};
                         data.message = 'token失效';
                         socket.join(data.mId);
-                        io.sockets.in(data.mId).emit('drawing', data.data);
-
-
-
+                        io.sockets.in(data.mId).emit('drawing', (data.data));
                     }
-
 
                 }
             })
 
+        })
 
 
 
 
-            io.sockets.in(data.mId).emit('drawing', data.data);
+        //绘图事件
+        socket.on('editing', function (data) {
+            console.log('文本编辑进行中', data)
 
 
-            // socket.emit('news', '离开');
-            //socket.broadcast用于向整个网络广播(除自己之外)
-            //socket.broadcast.emit('c_leave','某某人离开了')
+            jwt.verify(data.token, 'zh-123456SFU>a4bh_$3#46d0e85W10aGMkE5xKQ', function (err, datas) {
+                if (err) {
+                    console.log(err);
+                } else {
+                    data.userinfo = datas;
+                    data.time = (new Date()).getTime();
+                    data.userid = datas.userid;
+                    if (datas.exp > data.time / 1000) {
+                        data.message = 'token有效';
+                        socket.join(data.mId);
+                        io.sockets.in(data.mId).emit('editing', data.data);
+
+                    } else {
+                        data.data = {};
+                        data.message = 'token失效';
+                        socket.join(data.mId);
+                        io.sockets.in(data.mId).emit('editing', (data.data));
+                    }
+
+                }
+            })
+
         })
 
 
