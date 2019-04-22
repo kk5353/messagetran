@@ -6,6 +6,7 @@ module.exports = function (io) {
 
     io.on('connection', function (socket) {
 
+        sockets = {};
         sockets.id = socket;
         //接收并处理客户端的hi事件
         socket.on('hi', function (data) {
@@ -18,12 +19,22 @@ module.exports = function (io) {
                     console.log(err);
                 } else {
                     data.data = datas;
+                    data.time = (new Date()).getTime();
+                    data.userid = datas.userid;
+                    if (datas.exp > data.time / 1000) {
+                        data.message = 'token有效';
+                    } else {
+                        data = {};
+                        data.message = 'token失效';
+
+                    }
+
+
                 }
             })
 
-
+            delete (data.token);
             socket.join(data.roomId);
-            data.name = '系统为您增加的内容';
 
             io.sockets.in(data.roomId).emit('c_hi', JSON.stringify(data));
 
@@ -43,6 +54,53 @@ module.exports = function (io) {
 
             socket.emit('c_hi', 'hello too!')
         });
+
+        //绘图事件
+        socket.on('drawing', function (data) {
+            console.log('画图进行中', data)
+
+
+            jwt.verify(data.token, 'zh-123456SFU>a4bh_$3#46d0e85W10aGMkE5xKQ', function (err, datas) {
+                if (err) {
+                    console.log(err);
+                } else {
+                    data.userinfo = datas;
+                    data.time = (new Date()).getTime();
+                    data.userid = datas.userid;
+                    if (datas.exp > data.time / 1000) {
+                        data.message = 'token有效';
+                        socket.join(data.mId);
+                        io.sockets.in(data.mId).emit('drawing', data.data);
+
+                    } else {
+                        data.data = {};
+                        data.message = 'token失效';
+                        socket.join(data.mId);
+                        io.sockets.in(data.mId).emit('drawing', data.data);
+
+
+
+                    }
+
+
+                }
+            })
+
+
+
+
+
+            io.sockets.in(data.mId).emit('drawing', data.data);
+
+
+            // socket.emit('news', '离开');
+            //socket.broadcast用于向整个网络广播(除自己之外)
+            //socket.broadcast.emit('c_leave','某某人离开了')
+        })
+
+
+
+
 
         //断开事件
         socket.on('disconnect', function (data) {
