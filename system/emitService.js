@@ -63,6 +63,9 @@ module.exports = function (io) {
             jwt.verify(data.token, 'zh-123456SFU>a4bh_$3#46d0e85W10aGMkE5xKQ', function (err, datas) {
                 if (err) {
                     console.log(err);
+                    data.message = 'token有误';
+                    socket.join(data.mId);
+                    io.sockets.in(data.mId).emit('editing', data.message);
                 } else {
                     data.userinfo = datas;
                     data.time = (new Date()).getTime();
@@ -73,10 +76,9 @@ module.exports = function (io) {
                         io.sockets.in(data.mId).emit('drawing', data.data);
 
                     } else {
-                        data.data = {};
                         data.message = 'token失效';
                         socket.join(data.mId);
-                        io.sockets.in(data.mId).emit('drawing', (data.data));
+                        io.sockets.in(data.mId).emit('drawing', data.message);
                     }
 
                 }
@@ -95,6 +97,10 @@ module.exports = function (io) {
             jwt.verify(data.token, 'zh-123456SFU>a4bh_$3#46d0e85W10aGMkE5xKQ', function (err, datas) {
                 if (err) {
                     console.log(err);
+                    data.message = 'token有误';
+                    socket.join(data.mId);
+                    io.sockets.in(data.mId).emit('editing', data.message);
+
                 } else {
                     data.userinfo = datas;
                     data.time = (new Date()).getTime();
@@ -108,7 +114,7 @@ module.exports = function (io) {
                         data.data = {};
                         data.message = 'token失效';
                         socket.join(data.mId);
-                        io.sockets.in(data.mId).emit('editing', (data.data));
+                        io.sockets.in(data.mId).emit('editing', data.message);
                     }
 
                 }
