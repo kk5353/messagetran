@@ -6,8 +6,7 @@ module.exports = function (io) {
 
     io.on('connection', function (socket) {
 
-        sockets = {};
-        sockets.id = socket;
+
         //接收并处理客户端的hi事件
         socket.on('hi', function (data) {
             console.log(data);
@@ -89,7 +88,7 @@ module.exports = function (io) {
 
 
 
-        //绘图事件
+        //editing message
         socket.on('editing', function (data) {
             console.log('文本编辑进行中', data)
 
@@ -122,6 +121,45 @@ module.exports = function (io) {
 
         })
 
+
+        //chat message
+        socket.on('chating', function (data) {
+            console.log('画图进行中', data)
+
+
+            jwt.verify(data.token, 'zh-123456SFU>a4bh_$3#46d0e85W10aGMkE5xKQ', function (err, datas) {
+                if (err) {
+                    console.log(err);
+                    data.message = 'token有误';
+                    socket.join(data.mId);
+                    io.sockets.in(data.mId).emit('editing', data.message);
+                } else {
+                    data.userinfo = datas;
+                    data.time = (new Date()).getTime();
+                    data.userid = datas.userid;
+                    if (datas.exp > data.time / 1000) {
+                        data.message = 'token有效';
+
+
+                        let sockets = new Map();
+                        sockets.set(data.userid, socket)
+
+                        console.log(sockets)
+                        console.log(sockets.get(data.userid))
+
+                        socket.join(data.mId);
+                        io.sockets.in(data.mId).emit('drawing', data.data);
+
+                    } else {
+                        data.message = 'token失效';
+                        socket.join(data.mId);
+                        io.sockets.in(data.mId).emit('drawing', data.message);
+                    }
+
+                }
+            })
+
+        })
 
 
 
