@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 var MongoClient = require('mongodb').MongoClient;
 var url = "mongodb://39.98.212.236:20003/runoob";
-module.exports = function (io) {
+module.exports = function (io, sockets) {
     // 分发user模块，比如用户的注册和登录请求业务逻辑将会在/api/user.js中实现
 
     io.on('connection', function (socket) {
@@ -124,7 +124,7 @@ module.exports = function (io) {
 
         //chat message
         socket.on('chating', function (data) {
-            console.log('画图进行中', data)
+            console.log('chating on the way ', data)
 
 
             jwt.verify(data.token, 'zh-123456SFU>a4bh_$3#46d0e85W10aGMkE5xKQ', function (err, datas) {
@@ -139,21 +139,37 @@ module.exports = function (io) {
                     data.userid = datas.userid;
                     if (datas.exp > data.time / 1000) {
                         data.message = 'token有效';
-
-
-                        let sockets = new Map();
                         sockets.set(data.userid, socket)
 
-                        console.log(sockets)
-                        console.log(sockets.get(data.userid))
+                        console.log(data.userid)
+                        // console.log(sockets.get(data.userid))
+
 
                         socket.join(data.mId);
-                        io.sockets.in(data.mId).emit('drawing', data.data);
+
+
+                        if (sockets.get(data.to) == undefined) {
+
+                        } else {
+                            sockets.get(data.to).emit('chating', data.content);
+
+                        }
+
+                        // sockets.get(data.userid).broadcast.to(data.mId).emit('chating', 'test');
+
+
+
+
+
+                        // io.sockets.in(data.mId).emit('chating', data.data);
+
+                        // socket.broadcast.to(data.mId).emit('chating', data.data);
+
 
                     } else {
                         data.message = 'token失效';
                         socket.join(data.mId);
-                        io.sockets.in(data.mId).emit('drawing', data.message);
+                        io.sockets.in(data.mId).emit('chating', data.message);
                     }
 
                 }
