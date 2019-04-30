@@ -7,9 +7,16 @@ module.exports = function (io, sockets) {
     io.on('connection', function (socket) {
 
 
+
+
         //接收并处理客户端的hi事件
         socket.on('hi', function (data) {
             console.log(data);
+
+
+
+
+
 
             //触发客户端事件c_hi
 
@@ -22,6 +29,7 @@ module.exports = function (io, sockets) {
                     data.userid = datas.userid;
                     if (datas.exp > data.time / 1000) {
                         data.message = 'token有效';
+                        sockets.set(data.userid, socket)
                     } else {
                         data = {};
                         data.message = 'token失效';
@@ -147,13 +155,71 @@ module.exports = function (io, sockets) {
 
                         socket.join(data.mId);
 
-
                         if (sockets.get(data.to) == undefined) {
 
+                            MongoClient.connect(url, { useNewUrlParser: true }, function (err, db) {
+                                if (err) throw err;
+                                var dbo = db.db("runoob");
+
+                                var myobj = [
+                                    { to: data.to, content: data.content, time: (new Date()).getTime(), read: 0 }
+                                ];
+
+                                console.log(myobj);
+
+                                dbo.collection("site").insertMany(myobj, function (err, res) {
+                                    if (err) throw err;
+                                    console.log("插入的文档数量为: " + res.insertedCount);
+                                    db.close();
+                                });
+                            });
+
                         } else {
+
+                            var whereStr = { to: data.userid, read: 0 };
+
+                            MongoClient.connect(url, { useNewUrlParser: true }, function (err, db) {
+                                if (err) throw err;
+                                var dbo = db.db("runoob");
+                                dbo.collection("site").find(whereStr).toArray(function (err, result) {
+                                    if (err) {
+                                        console.log('Error:' + err);
+                                    }
+
+
+
+                                    console.log('fasong  xiaoxi  gei  ziji ' + result);
+                                    console.log(result);
+                                    socket.emit('chating', result);
+
+                                    var devices = dbo.collection('vip');
+                                    var whereData = whereStr
+                                    var updateDat = { $set: { read: 1 } }; //如果不用$set，替换整条数据
+                                    devices.update(whereData, updateDat, function (error, result) {
+                                        if (error) {
+                                            console.log('Error:' + error);
+                                        } else {
+                                            console.log('result' + result);
+                                        }
+                                        db.close();
+                                    });
+
+
+
+
+
+
+
+
+                                });
+                            });
+
+
+                            socket.emit('chating', 'result');
                             sockets.get(data.to).emit('chating', data.content);
 
                         }
+                        // sockets.get(data.to).emit('chating', data.content);
 
                         // sockets.get(data.userid).broadcast.to(data.mId).emit('chating', 'test');
 
