@@ -5,18 +5,22 @@ const cookieParser = require('cookie-parser');
 const cookieSession = require('cookie-session');
 const path = require('path')
 const config = require('./config/config');
+var https=require('https');
+var http=require('http');
+var ws=require('ws');
+app =express();
+var httpserver = http.Server(app);
+var handleUpgrade = require('express-websocket');
+httpserver.on('upgrade', handleUpgrade(app, wss));
+var wss = new ws.Server({ noServer: true });
 
-//消息转发服务器socketIO
-var httpserver = require('http').createServer('*', function (req, res, next) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Headers", "X-Requested-With");
-  res.setHeader("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
-  res.setHeader("X-Powered-By", ' 3.2.1');
-  res.setHeader("Content-Type", "application/json;charset=utf-8");
-
-}
-).listen(config.EMIT_port);
 var io = require('socket.io')(httpserver);
 let sockets = new Map();
-var emitService = require('./emitService')(io, sockets);
-console.log('消息转发服务：http://127.0.0.1:' + config.EMIT_port);
+
+let emitService = require('./src/emitService')(io, sockets);
+let rest=require('./src/rest')(app);
+let ws1=require('./src/ws')(app,sockets)
+
+httpserver.listen(3000, function(){
+  console.log('message tranmit server listening on *:3000');
+});

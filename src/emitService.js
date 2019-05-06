@@ -4,21 +4,53 @@ var url = "mongodb://39.98.212.236:20003/runoob";
 module.exports = function (io, sockets) {
     // 分发user模块，比如用户的注册和登录请求业务逻辑将会在/api/user.js中实现
 
+    async function test(token) {
+        return new Promise((resolve, reject) => {
+            jwt.verify(token, 'zh-123456SFU>a4bh_$3#46d0e85W10aGMkE5xKQ', function (err, datas) {
+                if (err) {
+                    console.log(err);
+                    reject(err)
+                } else {
+                    resolve(datas);
+                    data.data = datas;
+                    data.time = (new Date()).getTime();
+                    data.userid = datas.userid;
+                    if (datas.exp > data.time / 1000) {
+                        data.message = 'token有效';
+                        sockets.set(data.userid, socket)
+                    } else {
+                        data = {};
+                        data.message = 'token失效';
+                    }
+                }
+            })
+        })
+    }
+
+
     io.on('connection', function (socket) {
 
+
+        let data = 'dddd';
+        // data = await test('fdfsf');
+
+        // test(`asdasd`)
+        //     .then()
+        //     .finally()
+        //     .catch()
 
 
 
         //接收并处理客户端的hi事件
-        socket.on('hi', function (data) {
-            console.log(data);
-
-
-
-
-
-
+        socket.on('heartbeat', function (data) {
+            console.log('heartbeat');
             //触发客户端事件c_hi
+
+
+            // const data = await test(data.token)
+            console.log('dgfgfdgffgf-----------------------')
+            console.log(data)
+
 
             jwt.verify(data.token, 'zh-123456SFU>a4bh_$3#46d0e85W10aGMkE5xKQ', function (err, datas) {
                 if (err) {
