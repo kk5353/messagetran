@@ -1,10 +1,10 @@
 module.exports = {
     mysql: {
         host: '39.98.212.236',
-        user: 'root',
-        password: '123456',
-        database: 'dbname',
-        port: 3308
+        user: 'admin',
+        password: 'b6be6397',
+        database: 'default',
+        port: 20002
     },
     expires_max: 6000,
     secret: 'zh-123456SFU>a4bh_$3#46d0e85W10aGMkE5xKQ',
