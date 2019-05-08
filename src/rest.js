@@ -35,6 +35,12 @@ module.exports = function (app) {
         res.send(req.body);
       })
 
+      app.get('/', function (req, res) {
+
+        console.log(req.query);
+          res.send(req.query);
+        })
+
 
       app.post('/joinMeeting', function (req, res) {
 

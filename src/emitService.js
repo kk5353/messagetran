@@ -1,23 +1,17 @@
 const jwt = require('jsonwebtoken');
-const config=require('../config/config')
-var MongoClient = require('mongodb').MongoClient;
-var url = "mongodb://39.98.212.236:20003/runoob";
+const config=require('../config/config');
 var mysql=require('mysql');
-var connection = mysql.createConnection({
+var mysqlpool = mysql.createPool({
     host: config.mysql.host,
     user: config.mysql.user,
     password : config.mysql.password,
     port: config.mysql.port,
     database: config.mysql.database});
-    connection.connect();
+  
 
-
-module.exports = function (io, sockets,livetime) {
-    // 分发user模块，比如用户的注册和登录请求业务逻辑将会在/api/user.js中实现
-
-    async function test(token) {
+function jwtVerify(token) {
         return new Promise((resolve, reject) => {
-            jwt.verify(token, 'zh-123456SFU>a4bh_$3#46d0e85W10aGMkE5xKQ', function (err, datas) {
+            jwt.verify(token, config.secret, function (err, datas) {
                 if (err) {
                     console.log(err);
                     reject(err)
@@ -38,18 +32,9 @@ module.exports = function (io, sockets,livetime) {
         })
     }
 
-
+module.exports = function (io, sockets,livetime) {
+    
     io.on('connection', function (socket) {
-
-
-        let data = 'dddd';
-        // data = await test('fdfsf');
-
-        // test(`asdasd`)
-        //     .then()
-        //     .finally()
-        //     .catch()
-
 
 
         //接收并处理客户端心跳事件
@@ -61,99 +46,65 @@ module.exports = function (io, sockets,livetime) {
 
                 if(value< (new Date()).getTime()){  //如果超时，全网广播下线了
                     // io.emit('chairmanOffLine',key);
-                    console.log('heartbeat:'+key+'已经挂掉了');
+                    console.log('heartbeat:'+key+'已经挂掉了'); 
+                    io.emit('chairmanOffLine',key);
                 }
 
             });
 
-           
-            jwt.verify(data.token, 'zh-123456SFU>a4bh_$3#46d0e85W10aGMkE5xKQ', function (err, datas) {
-                if (err) {
-                    console.log(err);
-                } else {
-                    data.data = datas;
+            jwtVerify(data.token).then(
+                function(data){
+                    console.log('resolved');
                     data.time = (new Date()).getTime();
-                    data.userid = datas.userid;
-                    if (datas.exp > data.time / 1000) {
+                    if (data.exp > data.time / 1000) {
                         data.message = 'token有效';
                         if(livetime.get(data.userid)==undefined){
                           livetime.set(data.userid, data.time)  
                         }else{
-                            // console.log(livetime.get(data.userid))
-
-                            livetime.set(data.userid, data.time+10000) 
+                           livetime.set(data.userid, data.time+100000) 
                         }
-
-
-                        if(livetime.get(data.userid)<data.time){  //如果超时，全网广播下线了
-                            io.emit('chairmanOffLine',data.userid);
-                        }
-                        
-                        
-                        sockets.set(data.userid, socket)
+                       sockets.set(data.userid, socket);
+                       console.log(data);
                     } else {
                         data = {};
                         data.message = 'token失效';
                     }
+                }, 
+                function(reason, data){
+                    console.log('rejected');
+                    console.log(reason);
                 }
-            })
-            socket.join(data.roomId);
-
+            );
             socket.emit('heartbeat', '你依然坚挺的活着');
         });
 
 
-
-
         //接收并处理客户端的关闭会议事件
-        socket.on('closeMeeting', function (data) {
-         
-          jwt.verify(data.token, config.secret, function (err, datas) {
-              if (err) {
-                  console.log(err);
-              } else {
-                  data.data = datas;
-                  data.time = (new Date()).getTime();
-                  data.userid = datas.userid;
-                  if (datas.exp > data.time / 1000) {
-                      data.message = 'token有效';
-                     io.emit('closeMeeting',data.meetingId);
+        socket.on('closeMeeting', function (data) {       
 
 
-//可能需要request请求
-
-
-
-                  } else {
-                      data = {};
-                      data.message = 'token失效';
-                  }
-              }
-          })
-       });
-
-
-        //接收并处理客户端的断开事件
-        socket.on('disconnect', function (data) {
-         
-            jwt.verify(data.token, config.secret, function (err, datas) {
-                if (err) {
-                    console.log(err);
-                } else {
-                    data.data = datas;
+            jwtVerify(data.token).then(
+                function(data){
+                    console.log('resolved');                  
                     data.time = (new Date()).getTime();
-                    data.userid = datas.userid;
-                    if (datas.exp > data.time / 1000) {
+                    if (data.exp > data.time / 1000) {
                         data.message = 'token有效';
-                       io.emit('disconnect',data.userid);  
-  //可能需要request请求  
+                       io.emit('closeMeeting',data.meetingId);
+                       
+                       //可能需要request请求
+  
                     } else {
                         data = {};
                         data.message = 'token失效';
                     }
+                }, 
+                function(reason, data){
+                    console.log('rejected');
+                    console.log(reason);
                 }
-            })
-         });
+            );
+       });
+
 
         //接收并处理客户端的踢人事件
         socket.on('kick', function (data) {
@@ -213,7 +164,6 @@ module.exports = function (io, sockets,livetime) {
                     data.userid = datas.userid;
                     if (datas.exp > data.time / 1000) {
                         data.message = 'token有效';
-
                        socket.broadcast.emit('changeChairman',data.id); 
   //可能需要request请求  
                     } else {
@@ -228,8 +178,6 @@ module.exports = function (io, sockets,livetime) {
         //绘图事件
         socket.on('drawing', function (data) {
             console.log('画图进行中', data)
-
-
             jwt.verify(data.token, 'zh-123456SFU>a4bh_$3#46d0e85W10aGMkE5xKQ', function (err, datas) {
                 if (err) {
                     console.log(err);
@@ -312,9 +260,9 @@ module.exports = function (io, sockets,livetime) {
                         let addSql='INSERT INTO message(sender,receiver,content,sendTime) VALUES(?,?,?,?)';
                         let addSqlParams = [data.userid, data.to, data.content, (new Date()).getTime() ];
 
-                        connection.query(addSql,addSqlParams,function (err, result) {
+                        mysqlpool.query(addSql,addSqlParams,function (err, result) {
                                 if (err) {
-                                    console.log('聊天消息插入数据库失败：',err,addSql,addSqlParams);
+                                    console.log('聊天消息插入数据库失败：',result,addSql,addSqlParams);
                                 }else{
                                     if(sockets.get(data.to)){
                                       sockets.get(data.to).emit('chating', data.content);  
@@ -338,11 +286,24 @@ module.exports = function (io, sockets,livetime) {
             
             
             
-            console.log('断s开', data)
+            console.log('断s开', data);
             
             
             socket.emit('news', '离开');
-            //socket.broadcast用于向整个网络广播(除自己之外)
+
+
+
+            for (var [key, value] of sockets) {
+                console.log(key + " = " + value);
+
+if(socket==value){
+    console.log(key+'----------------');
+    delete sockets[key];
+}
+
+              }
+              
+          //socket.broadcast用于向整个网络广播(除自己之外)
             //socket.broadcast.emit('c_leave','某某人离开了')
         })
 
