@@ -7,21 +7,21 @@ var connection = mysql.createConnection({
     password : config.mysql.password,
     port: config.mysql.port,
     database: config.mysql.database});
-    connection.connect();
+    // connection.connect();
 
 
-    var  sql = 'SELECT * FROM organtree';
-    //查
-    connection.query(sql,function (err, result) {
-            if(err){
-              console.log('[SELECT ERROR] - ',err.message);
-              }  
-          //  console.log(result[0]);
-           organ= JSON.parse(JSON.stringify(result[0]));   
-          organTree= JSON.parse( organ.organTree)    
-    });
+    // var  sql = 'SELECT * FROM organtree';
+    // //查
+    // connection.query(sql,function (err, result) {
+    //         if(err){
+    //           console.log('[SELECT ERROR] - ',err.message);
+    //           }  
+    //       //  console.log(result[0]);
+    //        organ= JSON.parse(JSON.stringify(result[0]));   
+    //       organTree= JSON.parse( organ.organTree)    
+    // });
      
-    connection.end();
+    // connection.end();
 
 
 
@@ -31,7 +31,8 @@ module.exports = function (app) {
 
     app.post('/', function (req, res) {
 
-      console.log(req.body);
+      console.log("此为restf接口被调用后的输出"+ JSON.stringify( req.body));
+      // console.log(req.body);
         res.send(req.body);
       })
 
